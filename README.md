@@ -1,5 +1,23 @@
 # PDF reconstruction workflow
 
+Repository instructions are in [AGENTS.md](AGENTS.md). See the
+[production direction and rollout](docs/production.md) for department and campus
+scaling, supported content routes, review requirements, and remaining work.
+
+The current implementation is a local PDF pilot with a validated document catalog
+and sequential batch processing. It is not a deployed service or an unattended
+converter for arbitrary inaccessible content.
+
+```sh
+.venv/bin/python scripts/batch.py --department msu-cs --dry-run
+.venv/bin/python scripts/batch.py --department msu-cs --stage all
+python3 -m unittest discover -s tests -v
+```
+
+Register PDF jobs in [config/documents.json](config/documents.json). Batch reports
+and logs are written under ignored `output/runs/`; successful checks still require
+content and accessibility review. Existing single-document commands remain valid.
+
 The 15-page `2023-BA-Year0-Plan.pdf` has been reconstructed into a canonical Markdown reading edition and generated semantic HTML. The original PDF remains at the workspace root and is unchanged.
 
 Start with [the HTML reading edition](output/2023-BA-Year0-Plan/html/index.html), [the canonical Markdown](source/assessment-plan.md), and [the assessment and verification record](verification/REVIEW.md).
@@ -23,7 +41,7 @@ The second PDF is reconstructed separately:
 
 All 73 content/static checks passed; all six source pages and the full desktop HTML rendering were inspected. Three source issues remain flagged: PLO wording, assessment frequency, and sampling scope. Keyboard, screen-reader, narrow-screen, zoom, contrast, and conformance checks remain manual work.
 
-The shared scripts now select document paths, title, and fingerprint from `scripts/documents.py`. Without `--document`, extraction and build still default to the original 2023 pilot. The paths and detailed pilot instructions below refer to that original document. New documents need their own reviewed configuration and content checks; the scripts are not an unattended converter for arbitrary PDFs.
+The shared scripts select document paths, title, and fingerprint from `config/documents.json`, validated by `scripts/documents.py`. Without `--document`, extraction and build still default to the original 2023 pilot. The paths and detailed pilot instructions below refer to that original document. New documents need their own reviewed configuration and content checks; the scripts are not an unattended converter for arbitrary PDFs.
 
 ## File organization
 

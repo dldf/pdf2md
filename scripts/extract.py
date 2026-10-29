@@ -1,19 +1,16 @@
 #!/usr/bin/env python3
 """Read-only extraction; never edits the PDF or canonical Markdown."""
-import hashlib
 import json
 import platform
 import importlib.metadata
 import pymupdf
 import pdfplumber
-from documents import ROOT, select_document
+from documents import ROOT, select_document, verify_input
 
 name, config = select_document()
-PDF = ROOT / (name + '.pdf')
+PDF = ROOT / config['input']
 VERIFY = ROOT / config['verification']
-digest = hashlib.sha256(PDF.read_bytes()).hexdigest()
-if digest != config['sha256']:
-    raise SystemExit('Source PDF differs from the inspected original. Review before proceeding.')
+digest = verify_input(config)
 for directory in (VERIFY / 'pages', VERIFY / 'extracted'):
     directory.mkdir(parents=True, exist_ok=True)
 report = {'source': PDF.name, 'sha256': digest, 'python': platform.python_version(),

@@ -6,8 +6,9 @@ import subprocess
 import zipfile
 from bs4 import BeautifulSoup
 
-from documents import ROOT, select_document
+from documents import ROOT, select_document, verify_input
 PDF_STEM, config = select_document()
+verify_input(config)
 SOURCE = ROOT / config['source']
 OUTPUT_DIR = ROOT / 'output' / PDF_STEM
 OUT = OUTPUT_DIR / 'html'
