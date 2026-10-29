@@ -447,7 +447,7 @@ Please indicate your level of preparedness in regard to the following CS program
 <details id="survey-evidence">
 <summary>Source layout evidence for Review 6</summary>
 <figure>
-<img src="../assets/survey-outcomes-source-page-14.png" alt="Source page 14: six outcome statements beside displaced rating circles; Excellent wraps below the other rating labels. The last statement continues on page 15." aria-describedby="survey-evidence-caption">
+<img src="assets/survey-outcomes-source-page-14.png" alt="Source page 14: six outcome statements beside displaced rating circles; Excellent wraps below the other rating labels. The last statement continues on page 15." aria-describedby="survey-evidence-caption">
 <figcaption id="survey-evidence-caption">Verification image, not a replacement for the transcribed text above. Draft description requires subject-matter review; the intended circle-to-outcome relationships remain uncertain.</figcaption>
 </figure>
 </details>

@@ -2,11 +2,7 @@
 .DS_Store
 __pycache__/
 output/
-verification/pages/
-verification/extracted/
-verification/browser-*.png
-verification/browser-*.json
-
 verification/**/pages/
 verification/**/extracted/
 verification/**/browser-*.png
+verification/**/browser-*.json

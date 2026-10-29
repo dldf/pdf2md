@@ -20,9 +20,7 @@ def local_path(value, root=ROOT, directory=None):
     if not boundary.is_relative_to(root.resolve()) or not resolved.is_relative_to(boundary):
         raise ValueError(f'Catalog path escapes its directory: {value}')
     if resolved == boundary:
-        # The original pilot deliberately uses the verification root itself.
-        if directory != 'verification':
-            raise ValueError(f'Catalog path must name a file: {value}')
+        raise ValueError(f'Catalog path must name an item within its directory: {value}')
     return resolved
 
 
@@ -48,15 +46,16 @@ def load_documents(path=None, root=ROOT):
             raise ValueError(f'{name}: missing title')
         if not isinstance(entry.get('sha256'), str) or not re.fullmatch(r'[0-9a-f]{64}', entry['sha256']):
             raise ValueError(f'{name}: invalid SHA-256')
-        input_path = local_path(entry.get('input'), root)
+        input_path = local_path(entry.get('input'), root, 'input')
         if input_path.suffix.lower() != '.pdf':
             raise ValueError(f'{name}: only the PDF processing route is implemented')
-        local_path(entry.get('source'), root, 'source')
-        verification = local_path(entry.get('verification'), root, 'verification')
-        destination = str(verification).casefold()
-        if destination in destinations:
-            raise ValueError(f'{name}: verification directory is shared by two documents')
-        destinations.add(destination)
+        source = local_path(entry.get('source'), root, 'source')
+        for field in ('output', 'verification'):
+            folder = local_path(entry.get(field), root, field)
+            destination = str(folder).casefold()
+            if destination in destinations:
+                raise ValueError(f'{name}: {field} directory is shared by two documents')
+            destinations.add(destination)
         verifier = entry.get('verifier')
         if verifier is not None:
             if local_path(verifier, root, 'scripts').suffix != '.py':
@@ -65,10 +64,13 @@ def load_documents(path=None, root=ROOT):
         if not isinstance(evidence, dict):
             raise ValueError(f'{name}: evidence_pages must be an object')
         entry['evidence_pages'] = {}
+        assets = (source.parent / 'assets').resolve()
+        if not assets.is_relative_to(source.parent):
+            raise ValueError(f'{name}: assets directory escapes its document folder')
         for page, asset in evidence.items():
             if not re.fullmatch(r'[1-9][0-9]*', page):
                 raise ValueError(f'{name}: evidence page must be a positive integer')
-            local_path(asset, root, 'assets')
+            local_path(asset, root, assets)
             entry['evidence_pages'][int(page)] = asset
         documents[name] = entry
     if not documents:
@@ -77,7 +79,7 @@ def load_documents(path=None, root=ROOT):
 
 
 def verify_input(config, root=ROOT):
-    path = local_path(config['input'], root)
+    path = local_path(config['input'], root, 'input')
     with path.open('rb') as stream:
         digest = hashlib.file_digest(stream, 'sha256').hexdigest()
     if digest != config['sha256']:

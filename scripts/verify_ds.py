@@ -10,7 +10,7 @@ from documents import ROOT, DOCUMENTS
 NAME = '2025-Year0-DS-Plan'
 CONFIG = DOCUMENTS[NAME]
 VERIFY = ROOT / CONFIG['verification']
-HTML = ROOT / 'output' / NAME / 'html/index.html'
+HTML = ROOT / CONFIG['output'] / 'html/index.html'
 soup = BeautifulSoup(HTML.read_text(), 'html.parser')
 checks = []
 def check(name, condition, detail=''):
@@ -39,7 +39,7 @@ def section(ident):
         parts.append(sibling)
     return numbered(''.join(str(x) for x in parts))
 
-check('Original PDF checksum unchanged',hashlib.sha256((ROOT/(NAME+'.pdf')).read_bytes()).hexdigest()==CONFIG['sha256'])
+check('Original PDF checksum unchanged',hashlib.sha256((ROOT/CONFIG['input']).read_bytes()).hexdigest()==CONFIG['sha256'])
 check('Document language and title',soup.html.get('lang')=='en-US' and text(soup.title)==CONFIG['title'])
 check('One main and one h1',len(soup.find_all('main'))==1 and len(soup.find_all('h1'))==1)
 levels=[int(h.name[1]) for h in soup.main.find_all(re.compile('^h[1-6]$'))]

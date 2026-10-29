@@ -4,9 +4,9 @@ Completed October 28, 2026. This is an agent-reviewed first pass, not independen
 
 ## Deliverables and regeneration
 
-- Canonical content: `source/2025-Year0-DS-Plan/assessment-plan.md`.
-- Generated reading edition: `output/2025-Year0-DS-Plan/html/index.html`.
-- Shareable HTML bundle: `output/2025-Year0-DS-Plan/assessment-plan-html.zip`.
+- Canonical content: `source/cs/msu-accreditation/2025-Year0-DS-Plan/content.md`.
+- Generated reading edition: `output/cs/msu-accreditation/2025-Year0-DS-Plan/html/index.html`.
+- Shareable HTML bundle: `output/cs/msu-accreditation/2025-Year0-DS-Plan/assessment-plan-html.zip`.
 - Supporting verification: this directory's `page-map.csv`, `source-inventory.json`, `automated-checks.json`, `pages/`, and `extracted/`.
 
 From the workspace root:
@@ -17,7 +17,7 @@ From the workspace root:
 .venv/bin/python scripts/verify_ds.py
 ```
 
-After editing only the Markdown, run the last two commands. Extraction never overwrites canonical content. No dependency installation or OCR was needed for this second conversion. Shared extraction/build scripts now accept `--document`; their default remains the 2023 pilot. Paths, titles, and source checksums are declared in `scripts/documents.py`. Fidelity checks remain document-specific, because table geometry, page continuations, and source ambiguities differ between PDFs.
+After editing only the Markdown, run the last two commands. Extraction never overwrites canonical content. No dependency installation or OCR was needed for this second conversion. Shared extraction/build scripts now accept `--document`; their default remains the 2023 pilot. Paths, titles, and source checksums are declared in `config/documents.json` and validated by `scripts/documents.py`. Fidelity checks remain document-specific, because table geometry, page continuations, and source ambiguities differ between PDFs.
 
 The canonical dialect remains Pandoc Markdown with explicit IDs, editorial divs, and semantic HTML tables. Future Word/tagged-PDF writers must convert those HTML tables into their own semantic structures; they cannot assume raw HTML will survive an arbitrary exporter. No Word or PDF output was generated.
 

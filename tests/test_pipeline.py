@@ -19,14 +19,15 @@ class PipelineTests(unittest.TestCase):
         self.temporary = TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
-        for folder in ('source', 'verification', 'scripts', 'assets', 'runs'):
-            (self.root / folder).mkdir()
-        (self.root / 'input.pdf').write_bytes(b'%PDF-test-fixture')
-        (self.root / 'source/content.md').write_text('# Example\n')
+        for folder in ('input', 'source/example/assets', 'verification', 'output', 'scripts', 'runs'):
+            (self.root / folder).mkdir(parents=True)
+        (self.root / 'input/example.pdf').write_bytes(b'%PDF-test-fixture')
+        (self.root / 'source/example/content.md').write_text('# Example\n')
         self.config = {
-            'id': 'example', 'department': 'test-unit', 'input': 'input.pdf',
+            'id': 'example', 'department': 'test-unit', 'input': 'input/example.pdf',
             'sha256': hashlib.sha256(b'%PDF-test-fixture').hexdigest(),
-            'source': 'source/content.md', 'verification': 'verification/example',
+            'source': 'source/example/content.md', 'verification': 'verification/example',
+            'output': 'output/example',
             'title': 'Example', 'evidence_pages': {}, 'verifier': 'scripts/verify_example.py',
         }
 
@@ -44,8 +45,8 @@ class PipelineTests(unittest.TestCase):
             self.assertEqual(verify_input(config), config['sha256'])
 
     def test_catalog_normalizes_evidence_page_numbers(self):
-        self.config['evidence_pages'] = {'14': 'assets/page.png'}
-        self.assertEqual(self.catalog()['example']['evidence_pages'], {14: 'assets/page.png'})
+        self.config['evidence_pages'] = {'14': 'source/example/assets/page.png'}
+        self.assertEqual(self.catalog()['example']['evidence_pages'], {14: 'source/example/assets/page.png'})
 
     def test_catalog_rejects_duplicate_ids_ignoring_case(self):
         other = deepcopy(self.config)
@@ -56,13 +57,36 @@ class PipelineTests(unittest.TestCase):
     def test_catalog_rejects_shared_verification_directory(self):
         other = deepcopy(self.config)
         other['id'] = 'second'
-        with self.assertRaisesRegex(ValueError, 'shared'):
+        other['output'] = 'output/second'
+        with self.assertRaisesRegex(ValueError, 'verification directory is shared'):
             self.catalog([self.config, other])
+
+    def test_catalog_rejects_shared_output_directory(self):
+        other = deepcopy(self.config)
+        other['id'] = 'second'
+        other['verification'] = 'verification/second'
+        with self.assertRaisesRegex(ValueError, 'output directory is shared'):
+            self.catalog([self.config, other])
+
+    def test_catalog_rejects_another_documents_assets(self):
+        self.config['evidence_pages'] = {'1': 'source/other/assets/page.png'}
+        with self.assertRaisesRegex(ValueError, 'escapes'):
+            self.catalog()
+
+    def test_catalog_rejects_assets_directory_symlink_to_another_document(self):
+        assets = self.root / 'source/example/assets'
+        assets.rmdir()
+        other = self.root / 'source/other/assets'
+        other.mkdir(parents=True)
+        assets.symlink_to(other, target_is_directory=True)
+        with self.assertRaisesRegex(ValueError, 'escapes its document folder'):
+            self.catalog()
 
     def test_catalog_rejects_unsafe_paths(self):
         for field, value in [('input', '../outside.pdf'), ('input', '/tmp/input.pdf'),
                              ('source', 'config/content.md'), ('verifier', 'source/run.py'),
-                             ('verification', 'source/evidence')]:
+                             ('verification', 'source/evidence'), ('output', 'source/output'),
+                             ('output', '../outside'), ('output', 'output')]:
             with self.subTest(field=field, value=value):
                 config = deepcopy(self.config)
                 config[field] = value
@@ -73,13 +97,13 @@ class PipelineTests(unittest.TestCase):
         with TemporaryDirectory() as outside:
             target = Path(outside) / 'outside.pdf'
             target.write_bytes(b'outside')
-            (self.root / 'link.pdf').symlink_to(target)
-            self.config['input'] = 'link.pdf'
+            (self.root / 'input/link.pdf').symlink_to(target)
+            self.config['input'] = 'input/link.pdf'
             with self.assertRaisesRegex(ValueError, 'escapes'):
                 self.catalog()
 
     def test_catalog_rejects_invalid_hash_and_unsupported_format(self):
-        for field, value in [('sha256', 'unverified'), ('input', 'input.docx')]:
+        for field, value in [('sha256', 'unverified'), ('input', 'input/example.docx')]:
             config = deepcopy(self.config)
             config[field] = value
             with self.subTest(field=field), self.assertRaises(ValueError):
@@ -96,7 +120,7 @@ class PipelineTests(unittest.TestCase):
 
     @patch('batch.subprocess.run')
     def test_changed_input_blocks_execution(self, run):
-        (self.root / 'input.pdf').write_bytes(b'changed')
+        (self.root / 'input/example.pdf').write_bytes(b'changed')
         result = self.run_job()
         self.assertEqual(result['status'], 'failed')
         self.assertIn('changed', result['detail'])
@@ -104,7 +128,7 @@ class PipelineTests(unittest.TestCase):
 
     @patch('batch.subprocess.run')
     def test_missing_canonical_content_requires_reconstruction(self, run):
-        (self.root / 'source/content.md').unlink()
+        (self.root / 'source/example/content.md').unlink()
         result = self.run_job('build')
         self.assertEqual(result['status'], 'needs_reconstruction')
         run.assert_not_called()
@@ -136,7 +160,7 @@ class PipelineTests(unittest.TestCase):
 
     def test_source_changed_during_job_invalidates_success(self):
         def change_source(*args, **kwargs):
-            (self.root / 'input.pdf').write_bytes(b'changed during job')
+            (self.root / 'input/example.pdf').write_bytes(b'changed during job')
             return subprocess.CompletedProcess([], 0)
         with patch('batch.subprocess.run', side_effect=change_source):
             self.assertEqual(self.run_job('build')['status'], 'failed')
@@ -159,7 +183,7 @@ class PipelineTests(unittest.TestCase):
                 patch('builtins.print'):
             self.assertEqual(main(['--dry-run']), 0)
         process.assert_not_called()
-        self.assertFalse((self.root / 'output').exists())
+        self.assertEqual(list((self.root / 'output').iterdir()), [])
 
 
 if __name__ == '__main__':

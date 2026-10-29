@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """Pilot-specific content fidelity and static HTML checks; not a conformance test."""
-from pathlib import Path
 from collections import Counter
 from bs4 import BeautifulSoup
 import hashlib
 import json
 import re
 import unicodedata
+from documents import ROOT, DOCUMENTS
 
-ROOT = Path(__file__).resolve().parents[1]
-HTML = ROOT / 'output/2023-BA-Year0-Plan/html/index.html'
+CONFIG = DOCUMENTS['2023-BA-Year0-Plan']
+VERIFY = ROOT / CONFIG['verification']
+HTML = ROOT / CONFIG['output'] / 'html/index.html'
 soup = BeautifulSoup(HTML.read_text(), 'html.parser')
 checks = []
 def check(name, condition, detail=''):
@@ -19,7 +20,7 @@ def tokens(s):
 def text(el):
     return el.get_text(' ', strip=True)
 def extracted(page):
-    return (ROOT / f'verification/extracted/page-{page:02d}-pdfplumber.txt').read_text()
+    return (VERIFY / f'extracted/page-{page:02d}-pdfplumber.txt').read_text()
 def numbered(el):
     clone = BeautifulSoup(str(el), 'html.parser')
     for ol in clone.find_all('ol'):
@@ -38,7 +39,7 @@ def section(ident):
         parts.append(sibling)
     return numbered(''.join(str(p) for p in parts))
 
-check('Original PDF SHA-256 unchanged', hashlib.sha256((ROOT/'2023-BA-Year0-Plan.pdf').read_bytes()).hexdigest() == '1625ff6a4f7b8d0397b09b8b0a934fde01f32fd22b9b3c0a46c5313f4d8389e1')
+check('Original PDF SHA-256 unchanged', hashlib.sha256((ROOT/CONFIG['input']).read_bytes()).hexdigest() == CONFIG['sha256'])
 check('English document language', soup.html.get('lang') == 'en-US')
 check('Nonempty document title', bool(text(soup.title)))
 check('One main landmark and one level-one heading', len(soup.find_all('main')) == 1 and len(soup.find_all('h1')) == 1)
@@ -77,7 +78,7 @@ for i,q in enumerate(indicators,1):
 
 # Cell comparisons use table geometry from pdfplumber, visually checked against PNGs.
 def table_data(p):
-    return json.loads((ROOT/f'verification/extracted/page-{p:02d}-tables.json').read_text())
+    return json.loads((VERIFY/f'extracted/page-{p:02d}-tables.json').read_text())
 def compare_row(name, source_cells, target_row):
     target_cells=target_row.find_all(['td','th'],recursive=False)
     check(name, len(source_cells)==len(target_cells) and all(tokens(a or '')==tokens(text(b)) for a,b in zip(source_cells,target_cells)))
@@ -107,12 +108,12 @@ check('Whole-document lexical coverage: only documented survey markers/list numb
 engine_diffs=[]
 for i in range(1,16):
     a=Counter(tokens(extracted(i)))
-    b=Counter(tokens((ROOT/f'verification/extracted/page-{i:02d}-mupdf.txt').read_text()))
+    b=Counter(tokens((VERIFY/f'extracted/page-{i:02d}-mupdf.txt').read_text()))
     engine_diffs.append({'page':i,'pdfplumber_only':dict(a-b),'mupdf_only':dict(b-a)})
 result={'scope':'Static and content checks only; no accessibility conformance claim.',
         'passed':sum(c['passed'] for c in checks),'total':len(checks),'checks':checks,'engine_token_differences':engine_diffs}
-(ROOT/'verification/automated-checks.json').write_text(json.dumps(result,indent=2)+'\n')
+(VERIFY/'automated-checks.json').write_text(json.dumps(result,indent=2)+'\n')
 for c in checks:
     if not c['passed']: print('FAIL',c['check'],c['detail'])
-print(f"{result['passed']}/{result['total']} checks passed. See verification/automated-checks.json")
+print(f"{result['passed']}/{result['total']} checks passed. See {CONFIG['verification']}/automated-checks.json")
 raise SystemExit(0 if all(c['passed'] for c in checks) else 1)

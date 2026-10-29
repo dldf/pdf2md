@@ -9,7 +9,8 @@ accessibility approval.
 
 - A validated PDF catalog in `config/documents.json`, replacing the hard-coded
   Python registry. Each entry has an ID, department, original file and checksum,
-  canonical Markdown, evidence directory, title, evidence images, and optional
+  original URL, canonical Markdown, output directory, evidence directory, title,
+  evidence images, and optional
   document-specific verifier. `msu-cs` is a local project slug, not an official
   university identifier or access-control boundary.
 - A sequential batch runner with department/document selection, dry runs,
@@ -52,14 +53,27 @@ specific IDs after resolving the problem. An interrupted report can retain
 catalog and selection, not input-file availability or tool installation.
 
 To register another PDF, add a unique ID and department to the catalog, record
-its actual SHA-256, and choose dedicated source/evidence paths. IDs use letters,
-numbers, hyphens, and underscores. Paths stay within the workspace. Originals
-may live in a local ignored collection. `source` names the expected Markdown;
+its actual SHA-256, and mirror its web path under `input/`, `source/`, `output/`,
+and `verification/`. For example, `input/cs/msu-accreditation/example.pdf` maps to
+`source/cs/msu-accreditation/example/content.md`,
+`output/cs/msu-accreditation/example/`, and
+`verification/cs/msu-accreditation/example/`. Set all four paths in the catalog;
+they are explicit so a stable document ID need not change when a URL moves.
+Record the discovery URL in `source_url`. IDs use letters, numbers, hyphens, and
+underscores. Paths stay within their respective workspace roots. New campus
+collections should use ignored subfolders of `input/` or approved storage;
+the two existing pilot originals remain tracked fixtures. `source` names the expected Markdown;
 the build is blocked until that file exists. `verifier: null` explicitly means
 fidelity verification is not implemented and blocks a successful full run.
 Verifier scripts are trusted repository code, invoked without document arguments;
 each registered verifier must check that particular document. Do not reuse the
 pilot verifier unchanged for unrelated PDFs. Catalog edits require code review.
+
+Each document's evidence images live beside its Markdown under `assets/`.
+Markdown image paths are relative to the document folder. The HTML builder
+copies those assets, preserving their subdirectories. Shared presentation is in
+`templates/template.html`. Folder organization does not add support for new input
+formats; the catalog still rejects non-PDF processing jobs.
 
 The current Pandoc Markdown includes raw HTML tables. It is an HTML-oriented
 representation, not yet a portable document model for every exporter.

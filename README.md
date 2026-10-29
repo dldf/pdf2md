@@ -18,20 +18,20 @@ Register PDF jobs in [config/documents.json](config/documents.json). Batch repor
 and logs are written under ignored `output/runs/`; successful checks still require
 content and accessibility review. Existing single-document commands remain valid.
 
-The 15-page `2023-BA-Year0-Plan.pdf` has been reconstructed into a canonical Markdown reading edition and generated semantic HTML. The original PDF remains at the workspace root and is unchanged.
+The 15-page `2023-BA-Year0-Plan.pdf` has been reconstructed into a canonical Markdown reading edition and generated semantic HTML. The original PDF is preserved unchanged under `input/cs/msu-accreditation/`.
 
-Start with [the HTML reading edition](output/2023-BA-Year0-Plan/html/index.html), [the canonical Markdown](source/assessment-plan.md), and [the assessment and verification record](verification/REVIEW.md).
+Start with [the HTML reading edition](output/cs/msu-accreditation/2023-BA-Year0-Plan/html/index.html), [the canonical Markdown](source/cs/msu-accreditation/2023-BA-Year0-Plan/content.md), and [the assessment and verification record](verification/cs/msu-accreditation/2023-BA-Year0-Plan/REVIEW.md).
 
-Generated outputs use `output/<PDF filename without .pdf>/`. The pilot lives in `output/2023-BA-Year0-Plan/`; `output/2025-Year0-DS-Plan/` contains the completed Data Science conversion.
+Document folders mirror the original web hierarchy under `input/`, `source/`, `output/`, and `verification/`. The pilot lives in `output/cs/msu-accreditation/2023-BA-Year0-Plan/`; `output/cs/msu-accreditation/2025-Year0-DS-Plan/` contains the completed Data Science conversion.
 
 ## Data Science conversion (2025)
 
 The second PDF is reconstructed separately:
 
-- [HTML reading edition](output/2025-Year0-DS-Plan/html/index.html) and [HTML ZIP](output/2025-Year0-DS-Plan/assessment-plan-html.zip)
-- [Canonical Markdown](source/2025-Year0-DS-Plan/assessment-plan.md)
-- [Assessment and verification record](verification/2025-Year0-DS-Plan/REVIEW.md)
-- [Source-page map](verification/2025-Year0-DS-Plan/page-map.csv)
+- [HTML reading edition](output/cs/msu-accreditation/2025-Year0-DS-Plan/html/index.html) and [HTML ZIP](output/cs/msu-accreditation/2025-Year0-DS-Plan/assessment-plan-html.zip)
+- [Canonical Markdown](source/cs/msu-accreditation/2025-Year0-DS-Plan/content.md)
+- [Assessment and verification record](verification/cs/msu-accreditation/2025-Year0-DS-Plan/REVIEW.md)
+- [Source-page map](verification/cs/msu-accreditation/2025-Year0-DS-Plan/page-map.csv)
 
 ```sh
 .venv/bin/python scripts/extract.py --document 2025-Year0-DS-Plan
@@ -45,28 +45,50 @@ The shared scripts select document paths, title, and fingerprint from `config/do
 
 ## File organization
 
+The path beneath each root follows the department's web structure. For example:
+
+```text
+input/cs/msu-accreditation/2023-BA-Year0-Plan.pdf
+source/cs/msu-accreditation/2023-BA-Year0-Plan/content.md
+source/cs/msu-accreditation/2023-BA-Year0-Plan/assets/
+output/cs/msu-accreditation/2023-BA-Year0-Plan/html/index.html
+verification/cs/msu-accreditation/2023-BA-Year0-Plan/REVIEW.md
+templates/template.html
+```
+
+The 2025 document uses the same structure with `2025-Year0-DS-Plan`. Original
+files belong in `input/`; editable reconstruction and document-specific assets
+belong in `source/`; generated deliverables belong in ignored `output/`; review
+records and extraction evidence belong in `verification/`. Shared presentation
+templates live in `templates/`.
+
+`config/documents.json` records the original URL, checksum, and each local path.
+Document IDs remain stable even if a URL or folder changes. The folder structure
+also accommodates DOCX and other inputs, but processing currently supports only
+registered PDFs. Moving other file types into `input/` does not convert them.
+
 | Location | Purpose |
 | --- | --- |
-| `2023-BA-Year0-Plan.pdf` | Original input; never modified by the workflow |
-| `source/assessment-plan.md` | Canonical content, inline semantic HTML tables, explicit editorial review notes |
-| `source/template.html` | HTML presentation and basic accessible styling; no report content |
-| `assets/` | Supporting source-page evidence image and draft alt-text inventory |
-| `output/2023-BA-Year0-Plan/html/` | Regenerable reading edition and copied assets; share the whole folder |
+| `input/cs/msu-accreditation/2023-BA-Year0-Plan.pdf` | Original input; never modified by the workflow |
+| `source/cs/msu-accreditation/2023-BA-Year0-Plan/content.md` | Canonical content, inline semantic HTML tables, explicit editorial review notes |
+| `templates/template.html` | HTML presentation and basic accessible styling; no report content |
+| `source/cs/msu-accreditation/2023-BA-Year0-Plan/assets/` | Supporting source-page evidence image and draft alt-text inventory |
+| `output/cs/msu-accreditation/2023-BA-Year0-Plan/html/` | Regenerable reading edition and copied assets; share the whole folder |
 | `scripts/extract.py` | Dual-engine extraction, page renderings, metadata, links, geometry, and hash record |
 | `scripts/build.py` | Markdown-to-HTML build using Pandoc; adds labeled scroll regions and copies assets |
 | `scripts/verify.py` | Pilot-specific content comparisons and static HTML checks |
-| `verification/page-map.csv` | Canonical section IDs mapped separately to 1-based PDF page numbers |
-| `verification/REVIEW.md` | Findings, decisions, unresolved questions, and manual check status |
-| `verification/source-inventory.json` | Source metadata, SHA-256, page/tool inventory |
-| `verification/automated-checks.json` | Machine-readable results and extraction-engine disagreements |
-| `verification/extracted/`, `verification/pages/` | Regenerable raw text, table data, text geometry, and page PNGs |
+| `verification/cs/msu-accreditation/2023-BA-Year0-Plan/page-map.csv` | Canonical section IDs mapped separately to 1-based PDF page numbers |
+| `verification/cs/msu-accreditation/2023-BA-Year0-Plan/REVIEW.md` | Findings, decisions, unresolved questions, and manual check status |
+| `verification/cs/msu-accreditation/2023-BA-Year0-Plan/source-inventory.json` | Source metadata, SHA-256, page/tool inventory |
+| `verification/cs/msu-accreditation/2023-BA-Year0-Plan/automated-checks.json` | Machine-readable results and extraction-engine disagreements |
+| `verification/cs/msu-accreditation/2023-BA-Year0-Plan/extracted/`, `verification/cs/msu-accreditation/2023-BA-Year0-Plan/pages/` | Regenerable raw text, table data, text geometry, and page PNGs |
 | `requirements.lock.txt` | Exact installed Python dependencies for this pilot |
 
 Generated outputs, extraction intermediates, screenshots, and the local virtual environment are listed in `.gitignore`. Preserve the Markdown, template, scripts, original, assets, review records, page map, and lock file as the reproducible package.
 
 ## Tools and setup
 
-Run from this workspace. The pilot used Python 3.14.7, Pandoc 3.8, PyMuPDF 2.0, pdfplumber 0.11.10 (pdfminer.six 20260107), and Beautiful Soup 4.15.0. See `verification/source-inventory.json` and the lock file for exact runtime details. Python packages were installed into `.venv`; no system Python packages were changed. Pandoc and Tesseract were already installed. Poppler was unavailable, so PyMuPDF performed rendering instead. The environment's PDF artifact-operation marker was run before artifact creation; it is an environment bookkeeping step, not a build dependency. No output PDF was authored.
+Run from this workspace. The pilot used Python 3.14.7, Pandoc 3.8, PyMuPDF 2.0, pdfplumber 0.11.10 (pdfminer.six 20260107), and Beautiful Soup 4.15.0. See `verification/cs/msu-accreditation/2023-BA-Year0-Plan/source-inventory.json` and the lock file for exact runtime details. Python packages were installed into `.venv`; no system Python packages were changed. Pandoc and Tesseract were already installed. Poppler was unavailable, so PyMuPDF performed rendering instead. The environment's PDF artifact-operation marker was run before artifact creation; it is an environment bookkeeping step, not a build dependency. No output PDF was authored.
 
 ```sh
 python3 -m venv .venv
@@ -79,15 +101,15 @@ pandoc --version
 
 The lock file reflects this macOS/Python installation; availability of pinned wheels on other platforms must be checked. Pandoc is an external dependency and must be installed separately. Network access is needed for dependency installation, not for extraction, build, or verification. The build contains no remote fonts, scripts, or stylesheets. Original external links are retained but were not fetched or validated.
 
-For ordinary content edits, edit `source/assessment-plan.md` and run only the build and verification commands. The extraction command never overwrites Markdown. The verifier intentionally detects substantive editorial changes: review them against the original and update the documented expectations when a change has been approved. Do not change the PDF hash guard merely to make a failure disappear.
+For ordinary content edits, edit `source/cs/msu-accreditation/2023-BA-Year0-Plan/content.md` and run only the build and verification commands. The extraction command never overwrites Markdown. The verifier intentionally detects substantive editorial changes: review them against the original and update the documented expectations when a change has been approved. Do not change the PDF hash guard merely to make a failure disappear.
 
-Open `output/2023-BA-Year0-Plan/html/index.html` directly in a browser. For local serving:
+Open `output/cs/msu-accreditation/2023-BA-Year0-Plan/html/index.html` directly in a browser. For local serving:
 
 ```sh
-.venv/bin/python -m http.server 8765 --bind 127.0.0.1 --directory output/2023-BA-Year0-Plan/html
+.venv/bin/python -m http.server 8765 --bind 127.0.0.1 --directory output/cs/msu-accreditation/2023-BA-Year0-Plan/html
 ```
 
-Stop the local server with Ctrl+C. Sharing the HTML alone will omit the supporting evidence image; share `output/2023-BA-Year0-Plan/html/` together or its ZIP bundle.
+Stop the local server with Ctrl+C. Sharing the HTML alone will omit the supporting evidence image; share `output/cs/msu-accreditation/2023-BA-Year0-Plan/html/` together or its ZIP bundle.
 
 ## Reconstruction method
 

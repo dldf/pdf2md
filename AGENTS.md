@@ -34,7 +34,12 @@ changing the architecture. Clearly distinguish implemented behavior from plans.
 
 - `config/documents.json` is the trusted configuration for registered PDF jobs.
   Department identifiers organize jobs; they are not authorization controls.
-- `source/` contains reviewed canonical content; extraction must not overwrite it.
+- `input/` preserves originals under paths reflecting their source website.
+  Mirror each document under `source/`, `output/`, and `verification/`, with
+  explicit paths and a stable ID in the catalog.
+- `source/` contains canonical `content.md` and document-local `assets/`;
+  extraction must not overwrite the canonical content. Shared HTML templates
+  belong in `templates/`.
 - `scripts/` contains shared tooling; keep existing single-document commands
   compatible when practical. New processing routes need representative fixtures.
 - `verification/` contains the existing pilot records. Generated run logs,

@@ -56,7 +56,7 @@ These token tests normalize case and punctuation. They detect loss and, for rubr
 To reproduce the successful visual evidence on macOS with Chrome installed, start the local server described in the README, then run:
 
 ```sh
-'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --no-first-run --no-default-browser-check --user-data-dir=/private/tmp/converter-html-review-tall --screenshot="$PWD/verification/browser-tall.png" --window-size=1440,16000 http://127.0.0.1:8765
+'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --disable-gpu --no-first-run --no-default-browser-check --user-data-dir=/private/tmp/converter-html-review-tall --screenshot="$PWD/verification/cs/msu-accreditation/2023-BA-Year0-Plan/browser-tall.png" --window-size=1440,16000 http://127.0.0.1:8765
 ```
 
 This profile is temporary and separate from the user's regular browser profile. No browser credentials or sessions were read. Graphics failures may make rendering unreliable in other environments; inspect the resulting image, not only the command exit code.
