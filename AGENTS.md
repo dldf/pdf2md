@@ -7,6 +7,21 @@ change before editing. Preserve unrelated work. Use a focused branch; do not
 commit to the default branch, merge, rewrite history, or change credentials
 without explicit authorization. Ask before destructive changes.
 
+## Scope and usage
+
+- Keep tasks narrowly scoped and minimize usage.
+- Do only the specific change requested. Do not expand it into cleanup,
+  modernization, documentation, tooling, or unrelated fixes.
+- Inspect only the files needed for the change. Avoid broad repository
+  exploration, repeated checks, and exhaustive validation.
+- For folder moves, update references affected by those moves. Do not rewrite
+  the moved content.
+- Use the smallest relevant verification. Do not run the entire test suite
+  unless the change requires it.
+- If substantial additional work is discovered, describe it briefly and stop
+  before doing it.
+- Finish with a short summary of what changed and what was verified.
+
 ## Purpose and current limits
 
 Prepare faithful, accessible reading editions of university content. This is a
@@ -51,7 +66,7 @@ changing the architecture. Clearly distinguish implemented behavior from plans.
 
 ## Verification
 
-For catalog or batch changes, run:
+When a change requires full catalog or batch regression checks, use:
 
 ```sh
 python3 -m unittest discover -s tests -v
