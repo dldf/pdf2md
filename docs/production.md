@@ -67,9 +67,11 @@ representation, not yet a portable document model for every exporter.
 ## Service design for hundreds of items
 
 Use one shared service with department workspaces, rather than a repository or
-code fork per department. Start with a representative public CS collection;
-restricted course materials need an approved environment and access model first.
-This is a proposed rollout assumption, not an approved campus assignment.
+code fork per department. The user selected public CS department documents and
+webpages for the first pilot. See [the public CS pilot](public-cs-pilot.md) for
+scope, initial source candidates, and intake requirements. Restricted course
+materials and other departments remain later phases; campus roles and publishing
+access have not been assigned.
 
 ```text
 Inventory -> Triage -> Extract -> Reconstruct -> Automated checks
@@ -182,9 +184,11 @@ supported by two documents.
 
 Proposed rollout, without committed dates:
 
-1. Inventory CS content and select 20–30 varied items with content owners. Include
-   scanned pages, tables, math, forms, and non-PDF formats; do not benchmark only
-   easy PDFs. Establish review criteria and measure time per content class.
+1. Inventory public CS documents and webpages and select 20–30 varied items with
+   content owners, starting from the linked pilot candidates. Include different
+   structures and formats actually found in that collection; do not benchmark
+   only easy PDFs or assume scans and Office files are present. Establish review
+   criteria and measure time per content class.
 2. Implement durable intake/versioning, review records, isolated workers, and
    the first supported CMS draft export. Add reusable validators and benchmark
    fixtures for those content classes. Retain the two existing regression cases.
