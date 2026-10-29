@@ -1,0 +1,341 @@
+{
+  "scope": "Static and content checks only; no accessibility conformance claim.",
+  "passed": 50,
+  "total": 50,
+  "checks": [
+    {
+      "check": "Original PDF SHA-256 unchanged",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "English document language",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Nonempty document title",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "One main landmark and one level-one heading",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Heading levels do not skip",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Unique element IDs",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Internal link targets exist",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Skip link targets focusable main",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Every table has caption and scoped headers",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Images have nonempty alt and existing local files",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "No replacement characters",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Mathematical symbols retained",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "All six review notices present",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "No fake form controls or submitted answers",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Exam question count",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Exam question 1: ordered words, numbers and score labels match source",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Exam question 2: ordered words, numbers and score labels match source",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Exam question 3: ordered words, numbers and score labels match source",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Exam question 4: ordered words, numbers and score labels match source",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Exam question 5: ordered words, numbers and score labels match source",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Exam question 6: ordered words, numbers and score labels match source",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Exam question 7: ordered words, numbers and score labels match source",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Exam question 8: ordered words, numbers and score labels match source",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Exam question 9: ordered words, numbers and score labels match source",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Exam question 10: ordered words, numbers and score labels match source",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Exam question 11: ordered words, numbers and score labels match source",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Exam question 12: ordered words, numbers and score labels match source",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Portfolio indicator count",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Portfolio indicator 1: ordered words, numbers and score labels match source",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Portfolio indicator 2: ordered words, numbers and score labels match source",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Portfolio indicator 3: ordered words, numbers and score labels match source",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Portfolio indicator 4: ordered words, numbers and score labels match source",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Portfolio indicator 5: ordered words, numbers and score labels match source",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Portfolio indicator 6: ordered words, numbers and score labels match source",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Portfolio indicator 7: ordered words, numbers and score labels match source",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Program table: populated row and blank Options cell",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "PLO table row 1",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "PLO table row 2",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "PLO table row 3",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "PLO table row 4",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "PLO table row 5",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "PLO table row 6",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Threshold table: all three data cells",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Planning chart row 1: outcome, courses, artifacts and three years",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Planning chart row 2: outcome, courses, artifacts and three years",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Planning chart row 3: outcome, courses, artifacts and three years",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Planning chart row 4: outcome, courses, artifacts and three years",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Planning chart row 5: outcome, courses, artifacts and three years",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Planning chart row 6: outcome, courses, artifacts and three years",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "check": "Whole-document lexical coverage: only documented survey markers/list numbers differ",
+      "passed": true,
+      "detail": "source-only {'0': 30, 'o': 1, 'q': 1}; output-only {'1': 1, '2': 1, '3': 1, '4': 1, '5': 1, '6': 1}"
+    }
+  ],
+  "engine_token_differences": [
+    {
+      "page": 1,
+      "pdfplumber_only": {},
+      "mupdf_only": {}
+    },
+    {
+      "page": 2,
+      "pdfplumber_only": {},
+      "mupdf_only": {}
+    },
+    {
+      "page": 3,
+      "pdfplumber_only": {},
+      "mupdf_only": {}
+    },
+    {
+      "page": 4,
+      "pdfplumber_only": {},
+      "mupdf_only": {}
+    },
+    {
+      "page": 5,
+      "pdfplumber_only": {},
+      "mupdf_only": {}
+    },
+    {
+      "page": 6,
+      "pdfplumber_only": {},
+      "mupdf_only": {}
+    },
+    {
+      "page": 7,
+      "pdfplumber_only": {},
+      "mupdf_only": {}
+    },
+    {
+      "page": 8,
+      "pdfplumber_only": {},
+      "mupdf_only": {}
+    },
+    {
+      "page": 9,
+      "pdfplumber_only": {},
+      "mupdf_only": {}
+    },
+    {
+      "page": 10,
+      "pdfplumber_only": {},
+      "mupdf_only": {}
+    },
+    {
+      "page": 11,
+      "pdfplumber_only": {},
+      "mupdf_only": {}
+    },
+    {
+      "page": 12,
+      "pdfplumber_only": {},
+      "mupdf_only": {}
+    },
+    {
+      "page": 13,
+      "pdfplumber_only": {},
+      "mupdf_only": {}
+    },
+    {
+      "page": 14,
+      "pdfplumber_only": {
+        "0": 2,
+        "responsibilities": 1,
+        "ethical": 1
+      },
+      "mupdf_only": {
+        "0responsibilities": 1,
+        "0ethical": 1
+      }
+    },
+    {
+      "page": 15,
+      "pdfplumber_only": {},
+      "mupdf_only": {}
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>$pagetitle$</title>
+<style>
+html { color-scheme: light; scroll-padding-top: 1rem; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #fff; color: #202b33; font: 1.05rem/1.65 system-ui, sans-serif; }
+.page { max-width: 76rem; padding: 2rem clamp(1rem, 4vw, 3rem) 5rem; margin: auto; }
+main > p, main > ul, main > ol, main > .editorial-note { max-width: 78ch; }
+h1, h2, h3, h4 { line-height: 1.25; color: #162f43; overflow-wrap: anywhere; }
+h1 { font-size: 2.3rem; margin-top: 1rem; }
+h2 { font-size: 1.65rem; margin-top: 3rem; border-top: 1px solid #b5c3cc; padding-top: 1.3rem; }
+h3 { font-size: 1.25rem; margin-top: 2rem; }
+h4 { font-size: 1.1rem; margin-top: 1.8rem; }
+a { color: #075580; text-decoration: underline; text-underline-offset: .15em; overflow-wrap: anywhere; }
+a:hover { text-decoration-thickness: .15em; }
+:focus-visible { outline: 3px solid #873900; outline-offset: 4px; }
+.skip-link { position: absolute; left: 1rem; top: -10rem; padding: .7rem; background: white; z-index: 10; }
+.skip-link:focus { top: .5rem; }
+nav { background: #f1f5f8; padding: 1rem 1.4rem; border: 1px solid #b5c3cc; }
+nav p { margin-top: 0; }
+nav ul { padding-left: 1.4rem; }
+.editorial-note { background: #fff8e9; border-left: .3rem solid #875000; padding: .6rem 1rem; margin: 1.3rem 0; }
+.editorial-note p { margin: .3rem 0; }
+.table-region { max-width: 100%; overflow-x: auto; margin: 1.5rem 0; }
+table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+caption { text-align: left; font-weight: 700; margin-bottom: .6rem; }
+th, td { border: 1px solid #8796a0; padding: .7rem; text-align: left; vertical-align: top; }
+thead { background: #e8eff4; }
+tbody th { font-weight: 600; }
+td ul { margin: 0; padding-left: 1.2rem; }
+#planning-table { min-width: 52rem; }
+#planning-table th:first-child { width: 32%; }
+li { margin: .3rem 0; }
+figure { margin: 1rem 0; }
+img { display: block; max-width: 100%; height: auto; border: 1px solid #8796a0; }
+figcaption { padding: .75rem 0; }
+summary { cursor: pointer; text-decoration: underline; color: #075580; }
+footer { margin-top: 3rem; border-top: 1px solid #b5c3cc; padding-top: 1rem; }
+@media (max-width: 40rem) { body { font-size: 1rem; } .page { padding-top: 1rem; } h1 { font-size: 1.9rem; } th, td { padding: .5rem; } }
+@media print { .skip-link, nav { display: none; } .page { max-width: none; padding: 0; } body { font-size: 10pt; } .table-region { overflow: visible; } #planning-table { min-width: 0; } thead { display: table-header-group; } h2, h3, h4 { break-after: avoid; } tr { break-inside: avoid; } a { color: inherit; } }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to document</a>
+<div class="page">
+<nav aria-label="Document contents">
+<p><strong>Contents</strong></p>
+$toc$
+</nav>
+<main id="main" tabindex="-1">
+$body$
+</main>
+<footer><p>Reconstructed reading edition. Editorial notes identify unresolved source issues. Accessibility conformance has not been established.</p></footer>
+</div>
+</body>
+</html>

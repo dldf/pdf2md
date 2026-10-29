@@ -1,0 +1,33 @@
+canonical_id,source_pages,source_region,verification_notes
+report,1,Title and submission metadata,Visible author credits retained
+programs,1,Program table and conditional prompts,Blank Options cell retained; two empty rows omitted; no selections inferred
+part-1,1,PLO table,Four full descriptions retained
+part-2,1-2,Assessment plan,Four subsections retained
+thresholds,1,Part 2a,At least 50% and Level 3 or higher
+methods,2,Part 2b,Direct measure and four indirect measures
+timeframe,2,Part 2c,Initial October 15 2026 deadline and two-year reporting cadence
+curriculum-map,2,Part 2d planning chart,Four rows; 12 year entries retained
+review-1,1-2,PLO 1 wording,Chart version omits storage and visualization
+part-3,2-3,Assessment process,Intro on p2; three questions and answers on p3
+artifact-identification,3,Part 3a,Student projects and written reports
+artifact-collection,3,Part 3b,CSCI 487 instructor and repository
+artifact-assessment,3,Part 3c,Each year and random sample retained
+review-2,2-3,Assessment frequency,Annual evaluation versus every-second-summer review
+part-4,3,Assessment-specific rubrics,Source template instruction and appendix reference
+part-5,3,Planning and report communication,Four questions and answers
+communication,3,Part 5a,August retreat and first-time instructor reminder
+collection-review,3,Part 5b,Neda Nazemi and Ann Marie Reinhold; every second summer
+report-writing,3,Part 5c,Assessment committee and director
+report-sharing,3,Part 5d,October 15th and submission email
+part-6,4,Closing the Loop,Template explanation and response retained
+appendix-a,4-6,Portfolio criteria and rubric,Six indicators and 24 scoring entries
+portfolio-rubrics,4-6,Section I,All six indicator titles retained
+portfolio-i1,4,Pipeline implementation,Five arrows and four scoring levels retained
+portfolio-i2,4,Data lifecycle,Four scoring levels retained
+portfolio-i3,4-5,Computational design,Heading on p4 joined to prompt and scores on p5
+portfolio-i4,5,Visualization,Two key figures emphasis retained
+portfolio-i5,5,Modeling,Four scoring levels retained
+portfolio-i6,5-6,Mathematical reasoning,Prompt and score 1 on p5; scores 2-4 on p6
+portfolio-performance,6,Section II,At least 50% and score 3 or higher
+portfolio-methodology,6,Section III,Two reviewers and third assessor arbitration
+review-3,3;6,Sampling scope,Random sample versus each portfolio

@@ -1,0 +1,110 @@
+{
+  "source": "2025-Year0-DS-Plan.pdf",
+  "sha256": "798dab9341e8a9e4aadf8aa6b243cd068aeee50d07c1516823176c5caf224565",
+  "python": "3.14.7",
+  "tools": {
+    "pymupdf": "2.0",
+    "pdfplumber": "0.11.10",
+    "beautifulsoup4": "4.15.0"
+  },
+  "pages": [
+    {
+      "page": 1,
+      "size_points": [
+        0.0,
+        0.0,
+        612.0,
+        792.0
+      ],
+      "text_characters": 1852,
+      "embedded_images": 0,
+      "vector_drawings": 94,
+      "form_widgets": 0,
+      "links": []
+    },
+    {
+      "page": 2,
+      "size_points": [
+        0.0,
+        0.0,
+        612.0,
+        792.0
+      ],
+      "text_characters": 3233,
+      "embedded_images": 0,
+      "vector_drawings": 111,
+      "form_widgets": 0,
+      "links": []
+    },
+    {
+      "page": 3,
+      "size_points": [
+        0.0,
+        0.0,
+        612.0,
+        792.0
+      ],
+      "text_characters": 2725,
+      "embedded_images": 0,
+      "vector_drawings": 0,
+      "form_widgets": 0,
+      "links": []
+    },
+    {
+      "page": 4,
+      "size_points": [
+        0.0,
+        0.0,
+        612.0,
+        792.0
+      ],
+      "text_characters": 2209,
+      "embedded_images": 0,
+      "vector_drawings": 0,
+      "form_widgets": 0,
+      "links": []
+    },
+    {
+      "page": 5,
+      "size_points": [
+        0.0,
+        0.0,
+        612.0,
+        792.0
+      ],
+      "text_characters": 2213,
+      "embedded_images": 0,
+      "vector_drawings": 0,
+      "form_widgets": 0,
+      "links": []
+    },
+    {
+      "page": 6,
+      "size_points": [
+        0.0,
+        0.0,
+        612.0,
+        792.0
+      ],
+      "text_characters": 733,
+      "embedded_images": 0,
+      "vector_drawings": 0,
+      "form_widgets": 0,
+      "links": []
+    }
+  ],
+  "metadata": {
+    "format": "PDF 1.7",
+    "title": "",
+    "author": "Ronald W Larsen",
+    "subject": "",
+    "keywords": "",
+    "creator": "Microsoft\u00ae Word for Microsoft 365",
+    "producer": "Microsoft\u00ae Word for Microsoft 365",
+    "creationDate": "D:20251106153946-07'00'",
+    "modDate": "D:20251106153946-07'00'",
+    "trapped": "",
+    "encryption": null
+  },
+  "catalog": "<<\n  /Type /Catalog\n  /Pages 2 0 R\n  /Lang (en)\n  /StructTreeRoot 47 0 R\n  /MarkInfo <<\n    /Marked true\n  >>\n  /Metadata 445 0 R\n  /ViewerPreferences 446 0 R\n>>"
+}
