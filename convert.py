@@ -69,31 +69,124 @@ def infer_document_font(fonts, body_size):
     return family, note
 
 
-def format_spans(spans, heading=False):
+def bullet_details(spans):
+    """Recognize text bullets, including font-specific Word list markers."""
+    raw = ''.join(span['text'] for span in spans)
+    match = re.match(r'^\s*([•●▪◦○·\uf0b7o])(?:\s+|$)', raw)
+    if not match:
+        return None
+    first = next(span for span in spans if span['text'].strip())
+    font = first['font'].lower()
+    if match[1] == '\uf0b7' and 'symbol' not in font:
+        return None
+    if match[1] == 'o' and not (first['text'].strip() == 'o' and 'courier' in font):
+        return None
+    chars = [char for span in spans for char in span.get('chars', [])]
+    body = next((char for char in chars[match.end():] if char['c'].strip()), None)
+    # A separate marker and indented body distinguish a Courier bullet from prose.
+    if match[1] == 'o' and (body is None or body['bbox'][0] - first['bbox'][2] < first['size'] * .4):
+        return None
+    return {'end': match.end(), 'symbol': match[1], 'x': first['bbox'][0],
+            'body_x': body['bbox'][0] if body else first['bbox'][0] + first['size'] * 1.5}
+
+
+def join_bullet_lines(text_blocks):
+    """Join separately extracted markers to the body on the same baseline."""
+    lines = [line for block in text_blocks for line in block.get('lines', [])]
+    joined = set()
+    for line in lines:
+        spans = [span for span in line['spans'] if span['text'].strip()]
+        if len(spans) != 1 or spans[0]['text'].strip() not in '•●▪◦○·\uf0b7o':
+            continue
+        marker = spans[0]
+        if marker['text'].strip() == 'o' and 'courier' not in marker['font'].lower():
+            continue
+        candidates = [other for other in lines if other is not line and id(other) not in joined
+                      and other['spans'] and other['spans'][0]['text'].strip()
+                      and abs(other['spans'][0]['origin'][1] - marker['origin'][1]) <= 1
+                      and 0 <= other['bbox'][0] - marker['bbox'][2] <= marker['size'] * 2.5]
+        if len(candidates) != 1:
+            continue
+        body = candidates[0]
+        marker['text'] += ' '
+        marker['chars'].append({'c': ' ', 'origin': marker['origin'], 'bbox': marker['bbox']})
+        line['spans'].extend(body['spans'])
+        line['bbox'] = tuple(pymupdf.Rect(line['bbox']) | pymupdf.Rect(body['bbox']))
+        joined.add(id(body))
+    for block in text_blocks:
+        if 'lines' in block:
+            block['lines'] = [line for line in block['lines'] if id(line) not in joined]
+
+
+def mark_highlights(page, text_blocks, drawings):
+    """Mark characters under inline backgrounds or PDF highlight annotations."""
+    traces = page.get_texttrace()
+    sequence = {(chr(char[0]), tuple(round(v, 2) for v in char[2])): trace['seqno']
+                for trace in traces for char in trace['chars']}
+    backgrounds = [drawing for drawing in drawings if len(drawing['items']) == 1
+                   and drawing['items'][0][0] == 're' and drawing.get('fill') is not None
+                   and not all(channel >= .99 for channel in drawing['fill'])
+                   and (drawing.get('fill_opacity') or 0) > 0]
+    annotations = [(annotation, [pymupdf.Quad(annotation.vertices[i:i + 4]).rect
+                                for i in range(0, len(annotation.vertices or []), 4)])
+                   for annotation in page.annots() or []
+                   if annotation.type[0] == pymupdf.PDF_ANNOT_HIGHLIGHT]
+    for block in text_blocks:
+        for line in block.get('lines', []):
+            for span in line['spans']:
+                flags = []
+                for char in span['chars']:
+                    rect = pymupdf.Rect(char['bbox'])
+                    seqno = sequence.get((char['c'], tuple(round(v, 2) for v in char['origin'])), -1)
+                    annotated = any(inside(rect, region) for _, regions in annotations for region in regions)
+                    background = any(drawing['seqno'] < seqno
+                                     and drawing['rect'].height <= span['size'] * 1.8
+                                     and inside(rect, drawing['rect']) for drawing in backgrounds)
+                    flags.append(annotated or background)
+                span['highlighted'] = flags
+    # Highlight annotations have curved ends in their appearance paths. Exclude
+    # only those matching paths, not other figures underneath the annotation.
+    annotation_drawings = {drawing['seqno'] for drawing in drawings
+                           if drawing['type'] == 'f'
+                           and [item[0] for item in drawing['items']] == ['c', 'l', 'c']
+                           and any(annotation.rect.contains(drawing['rect'])
+                                   and any(drawing['rect'].contains(region) for region in regions)
+                                   for annotation, regions in annotations)}
+    return traces, annotation_drawings
+
+
+def format_spans(spans, heading=False, bullet=None):
     raw = ''.join(span['text'] for span in spans)
     # Markdown list markers must remain outside emphasis delimiters.
     marker = re.match(r'^\s*(?:\d{1,2}[.)]|[a-z][.)]|[•●▪])(?:\s+|$)', raw)
-    skip = marker.end() if marker else 0
-    prefix = clean(marker[0]) + ' ' if marker else ''
+    skip = bullet['end'] if bullet else marker.end() if marker else 0
+    prefix = '- ' if bullet else clean(marker[0]) + ' ' if marker else ''
     runs = []
     for span in spans:
-        text = span['text'][skip:]
+        offset = min(skip, len(span['text']))
+        text = span['text'][offset:]
         skip = max(0, skip - len(span['text']))
         if not text:
             continue
         style = span['flags'] & (2 if heading else 18)  # Italic / bold.
-        if runs and runs[-1][0] == style:
-            runs[-1][1] += text
-        else:
-            runs.append([style, text])
+        highlights = span.get('highlighted', [False] * len(span['text']))
+        for index, char in enumerate(text, offset):
+            key = style, highlights[index]
+            if runs and runs[-1][0] == key:
+                runs[-1][1] += char
+            else:
+                runs.append([key, char])
     result = [prefix]
-    for style, text in runs:
+    for (style, highlighted), text in runs:
         if not text.strip():
             result.append(' ')
             continue
         marks = ('**' if style & 16 else '') + ('*' if style & 2 else '')
-        result.append((' ' if text[0].isspace() else '') + marks + escape(text)
-                      + marks + (' ' if text[-1].isspace() else ''))
+        formatted = marks + escape(text) + marks
+        if highlighted:
+            formatted = '<mark>' + formatted + '</mark>'
+        result.append((' ' if text[0].isspace() else '') + formatted
+                      + (' ' if text[-1].isspace() else ''))
     return clean(''.join(result))
 
 
@@ -101,7 +194,7 @@ def join_blocks(blocks):
     """Keep consecutive simple list items tight, with other blocks separated."""
     result, previous = [], None
     for block in blocks:
-        match = re.match(r'^(?:(\d{1,2})([.)])|([a-z])([.)])|(-))\s+', block)
+        match = re.match(r'^(?:(\d{1,2})([.)])|([a-z])([.)])|(-))\s+', block.lstrip(' '))
         kind = (('number', match[2]) if match and match[1] else
                 ('letter', match[4]) if match and match[3] else
                 ('bullet', '-') if match else None)
@@ -177,28 +270,101 @@ def is_underline(box, text_blocks):
     return False
 
 
-def is_decoration(drawing, text_blocks):
-    """Recognize plain rules and borders around extractable text."""
+def is_decoration(drawing, text_blocks, text_traces=()):
+    """Recognize rules, text borders, and colored backgrounds behind text."""
     items = drawing['items']
-    if len(items) != 1 or (drawing.get('width') or 0) > 1:
+    if len(items) != 1:
         return False
     box = pymupdf.Rect(drawing['rect'])
     kind = items[0][0]
+    width = drawing.get('width') or 0
     if kind == 'l':
-        return box.width == 0 or box.height == 0
-    if kind != 're':
+        return width <= 4 and (box.width == 0 or box.height == 0)
+    if kind != 're' or width > 3:
         return False
     if min(box.width, box.height) <= 1:
         return True
     fill = drawing.get('fill')
-    if fill is not None and not all(channel >= .99 for channel in fill):
+    if (6 <= box.width <= 24 and 6 <= box.height <= 24 and .75 <= box.width / box.height <= 1.35
+            and (fill is None or all(channel >= .99 for channel in fill))):
+        # Unresolved checkbox-like shapes must not disappear as text borders.
         return False
+    if fill is not None and not all(channel >= .99 for channel in fill):
+        # A highlight can cover only part of a span, and font boxes can extend
+        # beyond the painted letters. Require later text over the background.
+        padded = box + (-1, -1, 1, 1)
+        return any(trace['seqno'] > drawing['seqno'] and sum(
+            not chr(char[0]).isspace() and padded.contains(pymupdf.Rect(char[3]))
+            for char in trace['chars']) >= 2 for trace in text_traces)
     return any(box.contains(pymupdf.Rect(span['bbox'])) and span['text'].strip()
                for block in text_blocks for line in block.get('lines', [])
                for span in line['spans'])
 
 
+def extract_checkboxes(drawings, text_blocks, tables, images):
+    """Recognize outlined boxes with separate, unambiguous text labels/marks."""
+    lines = [line for block in text_blocks for line in block.get('lines', [])]
+    events, consumed_spans, consumed_drawings, consumed_tables = [], set(), set(), set()
+    marks = {'x', 'X', '✓', '✔'}
+    for drawing in drawings:
+        box = pymupdf.Rect(drawing['rect'])
+        fill = drawing.get('fill')
+        if (len(drawing['items']) != 1 or drawing['items'][0][0] != 're'
+                or drawing.get('color') is None
+                or not (6 <= box.width <= 24 and 6 <= box.height <= 24)
+                or not .75 <= box.width / box.height <= 1.35
+                or (fill is not None and not all(channel >= .99 for channel in fill))):
+            continue
+        # Only replace a table when it is the checkbox itself, never a cell
+        # inside a larger table. Filled boxes and non-text marks stay for review.
+        touching = [table for table in tables if box.intersects(pymupdf.Rect(table.bbox))]
+        if any(len(table.cells) != 1 or not (box + (-2, -2, 2, 2)).contains(table.bbox)
+               for table in touching):
+            continue
+        if any(box.intersects(pymupdf.Rect(info['bbox'])) for info in images):
+            continue
+        if any(other is not drawing and box.intersects(pymupdf.Rect(other['rect']))
+               for other in drawings):
+            continue
+        enclosed = [span for line in lines for span in line['spans']
+                    if span['text'].strip() and inside(span['bbox'], box)]
+        if any(span['text'].strip() not in marks for span in enclosed):
+            continue
+        candidates = []
+        for line in lines:
+            spans = [span for span in line['spans'] if span['text'].strip()]
+            label = clean(''.join(span['text'] for span in line['spans']))
+            rect = pymupdf.Rect(line['bbox'])
+            if (not spans or label in marks or len(label) > 60 or len(label.split()) > 6
+                    or any(id(span) in consumed_spans for span in spans)
+                    or any(inside(rect, table.bbox) for table in tables)):
+                continue
+            overlap = min(box.y1, rect.y1) - max(box.y0, rect.y0)
+            if overlap < .35 * min(box.height, rect.height):
+                continue
+            gap = rect.x0 - box.x1 if rect.x0 >= box.x1 - 2 else box.x0 - rect.x1
+            if 0 <= gap <= max(40, box.width * 3):
+                candidates.append((gap, spans, label))
+        candidates.sort(key=lambda candidate: candidate[0])
+        if not candidates or (len(candidates) > 1 and candidates[1][0] - candidates[0][0] < 3):
+            continue
+        _, spans, label = candidates[0]
+        consumed_spans.update(id(span) for span in [*enclosed, *spans])
+        consumed_drawings.add(drawing['seqno'])
+        consumed_tables.update(id(table) for table in touching)
+        events.append((box.y0, box.x0, 'checkbox', f'- [{"x" if enclosed else " "}] {escape(label)}'))
+    # Slightly misaligned boxes on one row still read from left to right.
+    row_y = None
+    events.sort(key=lambda event: event[:2])
+    for index, (y, x, kind, text) in enumerate(events):
+        if row_y is None or y - row_y > 3:
+            row_y = y
+        events[index] = (row_y, x, kind, text)
+    return events, consumed_spans, consumed_drawings, consumed_tables
+
+
 def words(text):
+    text = re.sub(r'</?mark>', '', text)
     text = re.sub(r'!?\[([^\]]*)\]\([^\n]*?\)', r'\1', text)
     return Counter(re.findall(r'\w+', unicodedata.normalize('NFKC', clean(text)).casefold()))
 
@@ -359,6 +525,15 @@ def make_table(table, previous, page_number, page):
     return text, note, {'header': header, 'bbox': table.bbox, 'page': page_number, 'caption': caption}
 
 
+def format_review_log(markdown, page_count, page_notes):
+    """Summarize flagged pages, keeping every warning for each page together."""
+    lines = [str(markdown.resolve()), f'{page_count} pages, {len(page_notes)} flagged for review:']
+    for number, notes in sorted(page_notes.items()):
+        details = ' '.join(' '.join(note.split()) for note in dict.fromkeys(notes))
+        lines.append(f'  Page {number}/{page_count} : {details}')
+    return '\n'.join(lines) + '\n'
+
+
 def convert_pdf(pdf, destination):
     if destination.exists():
         raise FileExistsError(f'{destination} exists. Choose another output folder to protect edits.')
@@ -391,7 +566,9 @@ def convert_pdf(pdf, destination):
         previous_table = None
         found_title = False
         flagged_pages = 0
+        page_notes = {}
         description_number = 0
+        list_stack = []
         for index, page in enumerate(document):
             number = index + 1
             notes, events = [], []
@@ -404,43 +581,63 @@ def convert_pdf(pdf, destination):
             if page.rotation or abs(plumb.pages[index].width - page.rect.width) > 1 or page.cropbox != page.mediabox:
                 tables = []
                 notes.append('Rotated or cropped page: table coordinates may differ; check the page image.')
+            text_blocks = page.get_text('rawdict')['blocks']
+            for block in text_blocks:
+                for line in block.get('lines', []):
+                    for span in line['spans']:
+                        span['text'] = ''.join(char['c'] for char in span['chars'])
+            join_bullet_lines(text_blocks)
+            page_drawings = page.get_drawings()
+            text_traces, annotation_drawings = mark_highlights(page, text_blocks, page_drawings)
+            page_images = page.get_image_info()
+            checkbox_events, checkbox_spans, checkbox_drawings, checkbox_tables = extract_checkboxes(
+                page_drawings, text_blocks, tables, page_images)
+            events.extend(checkbox_events)
+            if checkbox_events:
+                notes.append('Checkbox states and labels inferred from position; confirm the selected answers.')
+            tables = [table for table in tables if id(table) not in checkbox_tables]
             boxes = [table.bbox for table in tables]
-            text_blocks = page.get_text('dict')['blocks']
             for table in tables:
                 events.append((table.bbox[1], table.bbox[0], 'table', table))
             for block in text_blocks:
                 for line in block.get('lines', []):
-                    nonempty = [i for i, s in enumerate(line['spans']) if s['text'].strip()]
+                    remaining = [s for s in line['spans'] if id(s) not in checkbox_spans]
+                    nonempty = [i for i, s in enumerate(remaining) if s['text'].strip()]
                     if not nonempty or any(inside(line['bbox'], box) for box in boxes):
                         continue
                     # Spaces may be separate spans between a number and its text.
-                    spans = line['spans'][nonempty[0]:nonempty[-1] + 1]
+                    spans = remaining[nonempty[0]:nonempty[-1] + 1]
+                    bullet = bullet_details(spans)
                     # Separate a large bold heading from body text on the same line.
                     split = 0
-                    while split < len(spans) and spans[split]['flags'] & 16 and spans[split]['size'] > body_size + 0.5:
+                    while (not bullet and split < len(spans) and spans[split]['flags'] & 16
+                           and spans[split]['size'] > body_size + 0.5):
                         split += 1
                     groups = [('heading', spans[:split]), ('text', spans[split:])] if split else [('text', spans)]
                     for kind, group in groups:
                         if group:
                             data = {'text': clean(''.join(s['text'] for s in group)),
-                                    'markdown': format_spans(group, heading=kind == 'heading'),
+                                    'markdown': format_spans(group, heading=kind == 'heading', bullet=bullet),
+                                    'bullet': bullet,
                                     'bbox': line['bbox'], 'size': max(s['size'] for s in group)}
                             events.append((line['bbox'][1], group[0]['bbox'][0], kind, data))
-            for idx, info in enumerate(page.get_image_info()):
+            for idx, info in enumerate(page_images):
                 box = pymupdf.Rect(info['bbox']) & page.rect
                 if box.is_empty:
                     continue
                 path = image(page, assets, f'page-{number}-image-{idx+1}.png', box)
                 events.append((box.y0, box.x0, 'image', path))
                 notes.append('Image preserved; add a meaningful description and check any text inside it.')
-            drawings = [d for d in page.get_drawings()
-                       if not any((pymupdf.Rect(box) + (-2, -2, 2, 2)).contains(d['rect'])
+            drawings = [d for d in page_drawings
+                       if d['seqno'] not in checkbox_drawings
+                       and d['seqno'] not in annotation_drawings
+                       and not any((pymupdf.Rect(box) + (-2, -2, 2, 2)).contains(d['rect'])
                                   for box in boxes)
                        and not is_underline(pymupdf.Rect(d['rect']), text_blocks)]
             # Keep all strokes when a figure is present, including its rules
             # and labels. A page containing only plain decoration needs no PNG.
             vectors = ([pymupdf.Rect(d['rect']) for d in drawings]
-                       if any(not is_decoration(d, text_blocks) for d in drawings) else [])
+                       if any(not is_decoration(d, text_blocks, text_traces) for d in drawings) else [])
             if vectors:
                 box = pymupdf.Rect(vectors[0])
                 for rect in vectors[1:]:
@@ -473,18 +670,34 @@ def convert_pdf(pdf, destination):
                     paragraph = ''
 
             ordered = sorted(events, key=lambda event: (round(event[0], 1), event[1]))
+            # Keep page metadata inside the prior item when a list crosses a
+            # page boundary; an unindented HTML comment would terminate it.
+            first = ordered[0][3] if ordered and ordered[0][2] == 'text' else None
+            continues = list_stack and first and (
+                (first['bullet'] and first['bullet']['x'] >= list_stack[0]['x'] - 3)
+                or (not first['bullet'] and abs(first['bbox'][0] - list_stack[-1]['body_x']) <= 4))
+            page_indent = ' ' * (4 * len(list_stack)) if continues else ''
+            if not continues:
+                list_stack.clear()
             line_breaks, break_notes = infer_line_breaks(ordered)
             notes.extend(break_notes)
             for event_index, (_, _, kind, value) in enumerate(ordered):
                 if kind == 'table':
                     flush()
+                    list_stack.clear()
                     md, warning, state = make_table(value, previous_table if event_index == 0 else None, number, page)
                     page_parts.append(md)
                     notes.append(warning)
                     previous_table = state
                     prior = None
+                elif kind == 'checkbox':
+                    flush()
+                    list_stack.clear()
+                    page_parts.append(value)
+                    prior = None
                 elif kind == 'image':
                     flush()
+                    list_stack.clear()
                     description_number += 1
                     page_parts.append(f'<!-- description: desc-{description_number:03d} -->\n\n'
                                       f'![Source image on page {number}; description needs review]({value})')
@@ -500,13 +713,35 @@ def convert_pdf(pdf, destination):
                     label = re.match(r'^(\d{1,2}[.)]|[a-z][.)])(?:\s+|$)', raw)
                     if kind == 'heading':
                         flush()
+                        list_stack.clear()
                         level = '#' if not found_title else '##'
                         page_parts.append(f'{level} {text}')
                         found_title = True
+                    elif value['bullet']:
+                        flush()
+                        details = value['bullet']
+                        while list_stack and details['x'] < list_stack[-1]['x'] - 3:
+                            list_stack.pop()
+                        if list_stack and abs(details['x'] - list_stack[-1]['x']) <= 3:
+                            list_stack[-1] = details
+                        elif list_stack and details['x'] >= list_stack[-1]['body_x'] - 3:
+                            list_stack.append(details)
+                        else:
+                            list_stack[:] = [details]
+                        paragraph = ' ' * (4 * (len(list_stack) - 1)) + text
                     elif bullet or label:
                         flush()
+                        list_stack.clear()
                         paragraph = '- ' + re.sub(r'^[•●▪]\s*', '', text) if bullet else text
+                    elif list_stack and abs(value['bbox'][0] - list_stack[-1]['body_x']) <= 4:
+                        # Hanging lines belong to their item, not a new paragraph
+                        # or a sibling bullet. At a page break they form an
+                        # indented continuation after the source-page comment.
+                        paragraph += (' ' if paragraph else ' ' * (4 * len(list_stack))) + text
                     else:
+                        if list_stack:
+                            flush()
+                            list_stack.clear()
                         if prior:
                             gap = value['bbox'][1] - prior['bbox'][3]
                             if gap > max(4, prior['size'] * 0.6):
@@ -531,21 +766,28 @@ def convert_pdf(pdf, destination):
             if '\ufffd' in text_source or '\ufffd' in '\n'.join(page_parts):
                 notes.append('Unrecognized characters found; compare with the page image.')
             missing = words(text_source) - words('\n'.join(page_parts))
+            missing['o'] -= sum(value['bullet']['symbol'] == 'o' for _, _, kind, value in ordered
+                                if kind == 'text' and value['bullet'])
+            missing = +missing
             if missing:
                 sample = ', '.join(f'{word} ({count})' for word, count in list(missing.items())[:12])
                 notes.append(f'Possible text loss compared with independent extraction: {sample}. Check the page image.')
             if previous_table and (not ordered or ordered[-1][2] != 'table'):
                 previous_table = None
-            output.append(f'<!-- Source page {number} -->')
+            output.append(page_indent + f'<!-- Source page {number} -->')
             if notes:
                 flagged_pages += 1
+                page_notes[number] = list(dict.fromkeys(notes))
                 review = destination / 'review'
                 review.mkdir(exist_ok=True)
                 reference = image(page, review, f'p{number:03d}-original.png')
-                output.append(f'> **Review page {number}:** [Original page image]({reference})\n>\n'
-                              + '\n'.join('> - ' + note for note in dict.fromkeys(notes)))
+                output.append(page_indent + f'> **Review page {number}:** [Original page image]({reference})')
             output.extend(page_parts)
-        (destination / 'content.md').write_text(join_blocks(output) + '\n', encoding='utf-8')
+        markdown = destination / 'content.md'
+        review = destination / 'review'
+        review.mkdir(exist_ok=True)
+        (review / 'log.txt').write_text(format_review_log(markdown, len(document), page_notes), encoding='utf-8')
+        markdown.write_text(join_blocks(output) + '\n', encoding='utf-8')
         return len(document), flagged_pages
 
 

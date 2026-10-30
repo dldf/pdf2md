@@ -44,13 +44,27 @@ def document_css(source):
     return Path(__file__).with_name('review.css').read_text() + f'\nbody {{ font-family: {family}; }}\n'
 
 
-def render_body(markdown, folder, description_ids):
+def render_body(markdown, folder, description_ids, continuation_indent=0):
     # Only remove the converter's review blocks, not ordinary quotations.
-    markdown = re.sub(r'^> \*\*Review page \d+:\*\*[^\n]*(?:\n>[^\n]*)*',
+    markdown = re.sub(r'^[ \t]*> \*\*Review page \d+:\*\*[^\n]*(?:\n[ \t]*>[^\n]*)*',
                       '', markdown, flags=re.M)
+    # Page previews render fragments independently. Supply invisible ancestors
+    # for a list carried from the preceding page so it is not parsed as code.
+    first_line = next((line for line in markdown.splitlines() if line.strip()), '')
+    indentation = min(continuation_indent, len(first_line) - len(first_line.lstrip(' ')))
+    if indentation:
+        ancestors = [' ' * indent + '- <!-- pdf2md-list-continuation -->'
+                     for indent in range(0, indentation, 4)]
+        markdown = '\n'.join(ancestors) + '\n\n' + markdown
     result = subprocess.run(['pandoc', '--from=markdown+raw_html+fancy_lists+startnum-smart-implicit_figures', '--to=html5'],
                             input=markdown, capture_output=True, text=True, check=True)
     soup = BeautifulSoup(result.stdout, 'html.parser')
+    for comment in soup.find_all(string=lambda s: isinstance(s, Comment)
+                                and str(s).strip() == 'pdf2md-list-continuation'):
+        item = comment.find_parent('li')
+        comment.extract()
+        if item:
+            item['style'] = 'list-style-type: none'
     labels = {}
     for comment in soup.find_all(string=lambda s: isinstance(s, Comment)):
         table_match = re.fullmatch(r'\s*table:\s*(\{.*\})\s*', str(comment))
@@ -114,6 +128,8 @@ def preview(pdf, markdown, chrome, inspect=False):
     if digest and digest[1] != hashlib.sha256(pdf.read_bytes()).hexdigest():
         raise ValueError('This PDF does not match the source recorded in the Markdown.')
     parts = re.split(r'<!-- Source page (\d+) -->', source)
+    page_indents = {int(match[2]): len(match[1]) for match in
+                    re.finditer(r'(?m)^( *)<!-- Source page (\d+) -->', source)}
     css = document_css(source)
     review = markdown.parent / 'review'
     with pymupdf.open(pdf) as document, tempfile.TemporaryDirectory(prefix='access-preview-') as tmp:
@@ -136,7 +152,8 @@ def preview(pdf, markdown, chrome, inspect=False):
         for index, page in enumerate(document):
             number = index + 1
             width, height = math.ceil(page.rect.width * 1.5), math.ceil(page.rect.height * 1.5)
-            body = render_body(parts[2 * number], markdown.parent, description_ids)
+            body = render_body(parts[2 * number], markdown.parent, description_ids,
+                               continuation_indent=page_indents.get(number, 0))
             bodies.append(f'<section aria-label="Source page {number}">{body}</section>')
             html = work / f'p{number:03d}.html'
             html.write_text(f'''<!doctype html><html lang="en"><head><meta charset="utf-8">
