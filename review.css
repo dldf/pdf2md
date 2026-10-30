@@ -1,0 +1,22 @@
+/* Adapted from archive/accessconverter-pilot:templates/template.html. */
+* { box-sizing: border-box; }
+body { margin: 0; background: white; color: #202b33; font: 16px/1.5 system-ui, sans-serif; }
+main { padding: 48px 64px 64px; }
+header { font-size: 12px; color: #475569; border-bottom: 1px solid #b5c3cc; margin-bottom: 24px; padding-bottom: 8px; }
+h1, h2, h3, h4 { line-height: 1.25; color: #162f43; overflow-wrap: anywhere; }
+h1 { font-size: 26px; }
+h2 { font-size: 22px; margin-top: 28px; }
+h3 { font-size: 19px; }
+a { color: #075580; text-decoration: underline; overflow-wrap: anywhere; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: auto; }
+table.source-widths { table-layout: fixed; }
+caption { text-align: left; font-weight: 700; margin-bottom: 8px; }
+th, td { border: 1px solid #8796a0; padding: 8px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+thead { background: #e8eff4; }
+tbody th { font-weight: normal; }
+@counter-style alpha-paren { system: extends lower-alpha; suffix: ") "; }
+ol[type="a"] { list-style-type: alpha-paren; }
+li { margin: 0; }
+img { display: block; max-width: 100%; height: auto; outline: 3px solid #875000; }
+.description { background: #fff8e9; border-left: 3px solid #875000; padding: 10px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; }
